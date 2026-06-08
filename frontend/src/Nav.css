@@ -1,0 +1,117 @@
+.nav {
+  position: fixed;
+  top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Keeps search bar, logo, and avatar perfectly centered vertically */
+  width: 100%;
+  height: 68px;
+  padding: 0 4%;
+  background-color: transparent; /* Transparent by default at the very top */
+  z-index: 100; /* HIGH LAYER: Ensures navbar stays firmly on top of scrolling content */
+  transition-timing-function: ease-in;
+  transition: all 0.5s;
+}
+
+.nav__black {
+  background-color: #141414 !important; /* SOLID BLACK: Blocks out underlying text entirely on scroll */
+}
+
+/* Group container to keep logo and search input side-by-side */
+.nav__leftSide {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+}
+
+/* Restricts the logo from expanding out of bounds */
+.nav__logo {
+  width: 92px;
+  height: 25px;
+  object-fit: contain;
+  cursor: pointer;
+}
+
+/* SEARCH BOX LOGIC */
+.nav__searchBox input {
+  background-color: rgba(0, 0, 0, 0.6);
+  color: white;
+  border: 1px solid #666;
+  padding: 6px 10px 6px 32px; /* Generates padding on the left side so text doesn't hit the magnifying glass */
+  font-size: 0.85rem;
+  outline: none;
+  border-radius: 2px;
+  width: 200px;
+  transition: width 0.3s ease-in-out;
+  
+  /* Inline SVG code rendering a sleek white magnifying glass icon */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="white" class="bi bi-search" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>');
+  background-repeat: no-repeat;
+  background-position: 10px center;
+}
+
+/* Smooth expanding slide effect when you click inside the input box */
+.nav__searchBox input:focus {
+  width: 280px;
+  background-color: black;
+  border-color: white;
+}
+
+/* PROFILE DROPDOWN LAYOUT */
+.nav__profileContainer {
+  position: relative;
+  display: flex;
+  align-items: center;
+  padding: 10px 0;
+}
+
+.nav__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.nav__dropdown {
+  position: absolute;
+  top: 45px;
+  right: 0;
+  background-color: rgba(0, 0, 0, 0.95);
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 10px;
+  width: 160px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0px 8px 16px rgba(0,0,0,0.5);
+}
+
+.nav__dropdownItem {
+  font-size: 0.85rem;
+  color: white;
+  cursor: pointer;
+  text-align: left;
+  padding: 5px 10px;
+}
+
+.nav__dropdownItem:hover {
+  text-decoration: underline;
+}
+
+.nav__dropdownItem.profileName {
+  font-weight: bold;
+  color: #e50914;
+  cursor: default;
+}
+
+.nav__dropdownItem.profileName:hover {
+  text-decoration: none;
+}
+
+.nav hr {
+  border: 0;
+  height: 1px;
+  background: #333;
+  margin: 2px 0;
+}

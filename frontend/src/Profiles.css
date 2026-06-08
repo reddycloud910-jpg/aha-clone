@@ -1,0 +1,116 @@
+.profilesScreen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #111;
+  color: white;
+  text-align: center;
+}
+
+.profilesScreen__container h1 {
+  font-size: 3.5rem;
+  font-weight: 500;
+  margin-bottom: 40px;
+  letter-spacing: 1px;
+}
+
+.profilesScreen__gate {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.profilesScreen__profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  width: 150px;
+}
+
+.profilesScreen__profile img {
+  width: 130px;
+  height: 130px;
+  border-radius: 4px;
+  box-sizing: border-box;
+  border: 3px solid transparent;
+  transition: border 0.2s ease-in-out;
+}
+
+.profilesScreen__profile:hover img {
+  border: 3px solid white;
+}
+
+.profilesScreen__profile span {
+  margin-top: 15px;
+  color: gray;
+  font-size: 1.2rem;
+  transition: color 0.2s ease-in-out;
+}
+
+.profilesScreen__profile:hover span {
+  color: white;
+}
+
+.profilesScreen__addIcon {
+  width: 130px;
+  height: 130px;
+  background-color: #333;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 4rem;
+  color: gray;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.profilesScreen__profile:hover .profilesScreen__addIcon {
+  background-color: gray;
+  color: white;
+}
+
+.profilesScreen__form {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+}
+
+.profilesScreen__form input {
+  padding: 10px 20px;
+  font-size: 1.2rem;
+  background-color: #444;
+  border: none;
+  color: white;
+  outline: none;
+  border-radius: 4px;
+}
+
+.profilesScreen__buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.profilesScreen__buttons button {
+  padding: 8px 24px;
+  font-size: 1rem;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+}
+
+.profilesScreen__buttons button.save {
+  background-color: #e50914;
+  color: white;
+}
+
+.profilesScreen__buttons button.cancel {
+  background-color: transparent;
+  color: gray;
+  border: 1px solid gray;
+}

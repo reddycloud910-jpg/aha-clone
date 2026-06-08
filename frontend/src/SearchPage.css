@@ -1,0 +1,71 @@
+.searchPage {
+  background-color: #141414;
+  color: white;
+  min-height: 100vh;
+  padding: 95px 4% 40px 4%; /* Clear spacing safety block to keep text below header height bounds */
+}
+
+.searchPage h2 {
+  font-weight: 400;
+  color: #808080;
+  margin-bottom: 25px;
+  font-size: 1.5rem;
+}
+
+.searchPage__queryText {
+  color: white;
+  font-weight: bold;
+}
+
+.searchPage__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 30px 15px;
+}
+
+.searchPage__card {
+  position: relative;
+  cursor: pointer;
+  transition: transform 0.2s ease-in-out;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: #181818;
+}
+
+.searchPage__card:hover {
+  transform: scale(1.06);
+  z-index: 2;
+}
+
+.searchPage__card img {
+  width: 100%;
+  height: 280px;
+  object-fit: cover;
+}
+
+.searchPage__cardTitle {
+  background: #181818;
+  padding: 12px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-align: center;
+  min-height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.searchPage__cardTitle p {
+  margin: 0;
+  color: #e5e5e5;
+}
+
+.searchPage__card:hover .searchPage__cardTitle p {
+  color: white;
+}
+
+.searchPage__playerContainer {
+  margin-top: 40px;
+  border: 1px solid #333;
+  background-color: black;
+}
