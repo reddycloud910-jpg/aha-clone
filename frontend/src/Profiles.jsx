@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import api from "./api"; // 👈 Connects to local server database
+import api from "./api"; // 🚀 Clean custom configured API instance
 import "./Profiles.css";
 
 function Profiles({ onSelectProfile }) {
@@ -19,11 +19,11 @@ function Profiles({ onSelectProfile }) {
 
   const fetchProfiles = async () => {
     try {
-      // ✅ Custom interceptor automatically handles your port domain and auth token tracking!
-      const response = await axios.get('/api/profiles');
+      // ✅ FIXED: Using api instance instead of unimported axios
+      const response = await api.get('/api/profiles');
       setProfiles(response.data);
     } catch (err) {
-      console.error("Error fetching profiles:", err);
+      console.error("Error fetching profiles:", err.response?.data || err.message);
     }
   };
 
@@ -34,8 +34,8 @@ function Profiles({ onSelectProfile }) {
     try {
       const randomAvatar = avatarOptions[Math.floor(Math.random() * avatarOptions.length)];
 
-      // ✅ Clean relative production endpoint mapping
-      const response = await axios.post('/api/profiles/add', { 
+      // ✅ FIXED: Using api instance instead of unimported axios
+      const response = await api.post('/api/profiles/add', { 
         name: newProfileName, 
         avatar: randomAvatar 
       });
@@ -44,7 +44,7 @@ function Profiles({ onSelectProfile }) {
       setNewProfileName('');
       setShowAddForm(false);
     } catch (err) {
-      console.error("Error creating profile:", err);
+      console.error("Error creating profile:", err.response?.data || err.message);
     }
   };
 
