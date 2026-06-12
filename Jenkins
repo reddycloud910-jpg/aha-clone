@@ -5,73 +5,62 @@ pipeline {
         NODE_HOME = tool 'NodeJS-26.3.0'
         DOCKER_HUB_USER = 'lakshmi7330'
         APP_VERSION = '1.0.1'
+        PATH = "${NODE_HOME}/bin:${env.PATH}"
     }
 
     stages {
 
-        stage('Git Checkout') {
+        stage('Checkout') {
             steps {
                 git branch: 'main',
                     url: 'https://github.com/reddycloud910-jpg/aha-clone.git'
             }
         }
 
-        stage('Initialize Node Environment') {
+        stage('Verify Node') {
             steps {
-                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
+                sh '''
+                    which node
+                    node -v
+                    npm -v
+                '''
+            }
+        }
+
+        stage('Backend Install') {
+            steps {
+                dir('backend') {
+                    sh 'npm ci --omit=dev'
+                }
+            }
+        }
+
+        stage('Frontend Build') {
+            steps {
+                dir('frontend') {
                     sh '''
-                        echo "Node Location:"
-                        which node
-                        node -v
-                        npm -v
+                        npm ci
+                        npm run build
                     '''
                 }
             }
         }
 
-        stage('Install Backend Dependencies') {
+        stage('Docker Build') {
             steps {
-                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
-                    dir('backend') {
-                        sh 'npm ci --omit=dev'
-                    }
-                }
-            }
-        }
-
-        stage('Build Frontend') {
-            steps {
-                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
-                    dir('frontend') {
-                        sh '''
-                            npm ci
-                            npm run build
-                        '''
-                    }
-                }
-            }
-        }
-
-        stage('Build Docker Images') {
-            steps {
-                sh """
-                    docker build -t ${DOCKER_HUB_USER}/netflix-frontend:${APP_VERSION} ./frontend
-                """
-
-                sh """
-                    docker build -t ${DOCKER_HUB_USER}/netflix-backend:${APP_VERSION} ./backend
-                """
+                sh "docker build -t ${DOCKER_HUB_USER}/netflix-frontend:${APP_VERSION} ./frontend"
+                sh "docker build -t ${DOCKER_HUB_USER}/netflix-backend:${APP_VERSION} ./backend"
             }
         }
     }
 
     post {
         success {
-            echo 'Pipeline completed successfully.'
+            echo 'Build completed successfully'
         }
 
         failure {
-            echo 'Pipeline failed.'
+            echo 'Build failed'
         }
     }
 }
