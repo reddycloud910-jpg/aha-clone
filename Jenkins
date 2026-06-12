@@ -15,23 +15,20 @@ pipeline {
             }
         }
 
-        stage('Verify Node') {
+        stage('Verify Tools') {
             steps {
-                nodejs('NodeJS-26.3.0') {
-                    sh '''
-                        node -v
-                        npm -v
-                    '''
-                }
+                sh '''
+                    node -v || true
+                    npm -v || true
+                    docker --version
+                '''
             }
         }
 
         stage('Backend Install') {
             steps {
                 dir('backend') {
-                    nodejs('NodeJS-26.3.0') {
-                        sh 'npm ci --omit=dev'
-                    }
+                    sh 'npm ci --omit=dev'
                 }
             }
         }
@@ -39,28 +36,37 @@ pipeline {
         stage('Frontend Build') {
             steps {
                 dir('frontend') {
-                    nodejs('NodeJS-26.3.0') {
-                        sh '''
-                            npm ci
-                            npm run build
-                        '''
-                    }
+                    sh '''
+                        npm ci
+                        npm run build
+                    '''
                 }
             }
         }
 
         stage('Docker Build') {
             steps {
-                sh '''
-                    docker --version
-                '''
 
                 dir('frontend') {
-                    sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ."
+                    sh '''
+                        if [ ! -f Dockerfile ]; then
+                          echo "ERROR: frontend/Dockerfile missing"
+                          exit 1
+                        fi
+
+                        docker build -t $DOCKER_HUB_USER/aha-frontend:$APP_VERSION .
+                    '''
                 }
 
                 dir('backend') {
-                    sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ."
+                    sh '''
+                        if [ ! -f Dockerfile ]; then
+                          echo "ERROR: backend/Dockerfile missing"
+                          exit 1
+                        fi
+
+                        docker build -t $DOCKER_HUB_USER/aha-backend:$APP_VERSION .
+                    '''
                 }
             }
         }
