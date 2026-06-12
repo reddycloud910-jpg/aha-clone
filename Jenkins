@@ -16,12 +16,11 @@ pipeline {
 
         stage('Verify Node') {
             steps {
-                // Using the official nodejs tool wrapper ensures clean plugin execution contexts
                 nodejs('NodeJS-26.3.0') {
                     sh '''
-                        which node || true
-                        node -v || echo "Node execution failed due to system package missing"
-                        npm -v || true
+                        which node
+                        node -v
+                        npm -v
                     '''
                 }
             }
@@ -50,9 +49,9 @@ pipeline {
             }
         }
 
-    stage('Docker Build') {
+        stage('Docker Build') {
             steps {
-                // Naming updated to match your aha-clone project
+                // Generates tags: lakshmi7330/aha-frontend:1.0.1
                 sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ./frontend"
                 sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ./backend"
             }
