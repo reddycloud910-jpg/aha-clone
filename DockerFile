@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  # 1. BACKEND SERVICE
+  aha-backend:
+    image: lakshmi7330/aha-backend:1.0.1
+    container_name: aha-backend
+    restart: always
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      # Using standard connection protocol string to bypass local network/DNS blocks
+      - MONGO_URI=mongodb://reddycloud910_db_user:gu1jDcwQMObo0aoC@cluster0-shard-00-00.l99lok8.mongodb.net:27017/netflixClone?ssl=true&authSource=admin&retryWrites=true&w=majority
+      - JWT_SECRET=mySuperSecretNetflixCloneKey2026!@#
+      - VITE_API_URL=http://localhost:5000
+    networks:
+      - aha-network
+
+  # 2. FRONTEND SERVICE
+  aha-frontend:
+    image: lakshmi7330/aha-frontend:1.0.1
+    container_name: aha-frontend
+    restart: always
+    ports:
+      - "3000:80" # Maps port 80 inside the container to port 3000 on your machine
+    depends_on:
+      - aha-backend
+    networks:
+      - aha-network
+
+# NETWORKING ARCHITECTURE
+networks:
+  aha-network:
+    driver: bridge
