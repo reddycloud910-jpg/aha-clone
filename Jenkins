@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+   
+    environment {
+        NODE_HOME = tool 'NodeJS-26.3.0' // Matches the Node tool name configured in Jenkins
+        DOCKER_HUB_USER = 'vishwask10'   // Your Docker Hub username
+        APP_VERSION = "1.0.1"
+    }
+   
+    stages { // Added back the missing stages wrapper block
+       
+        stage('Git Checkout') {
+            steps {
+                git branch: 'main', url: 'https://github.com/vishwa-awsDevops/aws-devops-project.git'
+            }
+        }
+       
+       
+       
+        stage('Initialize Node Environment') {
+            environment {
+                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+            }
+            steps {
+                sh 'node -v'
+                sh 'npm -v'
+            }
+        }
+
+          stage('Build') {
+            environment {
+                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+            }
+            steps {
+                sh 'node -v'
+            }
+        }
+
+        stage('Install & Build Application') {
+            environment {
+                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
+            }
+            steps {
+                // Compile and isolate backend operational dependencies
+                sh '''
+                    cd backend
+                    npm ci --only=production
+                '''
+               
+                // Compile and optimize static production assets for React frontend
+                sh '''
+                    cd frontend
+                    npm ci
+                    npm run build
+                '''
+            }
+        }
+       
+        stage('Package Container Images') {
+            steps {
+                sh "docker build -t ${env.DOCKER_HUB_USER}/netflix-frontend:${env.APP_VERSION} ./frontend"
+                sh "docker build -t ${env.DOCKER_HUB_USER}/netflix-backend:${env.APP_VERSION} ./backend"
+            }
+        }
+       
+    } // Closes stages
+} // Closes pipeline
