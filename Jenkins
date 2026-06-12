@@ -51,12 +51,17 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                // Generates tags: lakshmi7330/aha-frontend:1.0.1
-                sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ./frontend"
-                sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ./backend"
+                // Build Frontend by stepping into the frontend folder context
+                dir('frontend') {
+                    sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ."
+                }
+                
+                // Build Backend by stepping into the backend folder context
+                dir('backend') {
+                    sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ."
+                }
             }
         }
-    }
 
     post {
         success {
