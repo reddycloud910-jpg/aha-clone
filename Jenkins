@@ -7,6 +7,7 @@ pipeline {
     }
 
     stages {
+
         stage('Checkout') {
             steps {
                 git branch: 'main',
@@ -18,7 +19,6 @@ pipeline {
             steps {
                 nodejs('NodeJS-26.3.0') {
                     sh '''
-                        which node
                         node -v
                         npm -v
                     '''
@@ -51,18 +51,20 @@ pipeline {
 
         stage('Docker Build') {
             steps {
-                // Build Frontend by stepping into the frontend folder context
+                sh '''
+                    docker --version
+                '''
+
                 dir('frontend') {
                     sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ."
                 }
-                
-                // Build Backend by stepping into the backend folder context
+
                 dir('backend') {
                     sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ."
                 }
             }
         }
-    } // <-- THIS WAS MISSING! This closes out your stages block properly
+    }
 
     post {
         success {
