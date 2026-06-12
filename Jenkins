@@ -50,11 +50,11 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
+    stage('Docker Build') {
             steps {
-                // Docker builds run on host environment, no Node binary required here
-                sh "docker build -t ${DOCKER_HUB_USER}/netflix-frontend:${APP_VERSION} ./frontend"
-                sh "docker build -t ${DOCKER_HUB_USER}/netflix-backend:${APP_VERSION} ./backend"
+                // Naming updated to match your aha-clone project
+                sh "docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} ./frontend"
+                sh "docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} ./backend"
             }
         }
     }
