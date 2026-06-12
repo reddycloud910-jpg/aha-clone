@@ -1,7 +1,7 @@
 .login {
   position: relative;
   height: 100vh;
-  background: url("https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bcae-07a3f8dc141a/f6d7434e-d6de-4185-a6d4-c77a2d08737b/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg") center no-repeat;
+  background: url("https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&w=1920&q=80") center no-repeat;
   background-size: cover;
 }
 
@@ -60,7 +60,7 @@
   border-radius: 4px;
   font-size: 1rem;
   color: #fff;
-  background-color: #e50914;
+  background-color: #FF6A00;
   border: none;
   font-weight: 600;
   margin: 24px 0 12px 0;
@@ -68,7 +68,7 @@
 }
 
 .login__error {
-  background: #e87c03;
+  background: #FF6A00;
   border-radius: 4px;
   font-size: 14px;
   padding: 10px;
@@ -76,7 +76,7 @@
 }
 
 .login__gray {
-  color: #737373;
+  color: #FF6A00;
 }
 
 .login__link:hover {

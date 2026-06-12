@@ -25,15 +25,15 @@ function Nav({ currentProfile, onLogOutProfile, searchQuery, setSearchQuery }) {
       <div className="nav__leftSide">
         <img
           className="nav__logo"
-          src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg"
-          alt="Netflix Logo"
+          src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Aha_OTT_Logo.svg"
+          alt="aha Logo"
           onClick={() => {
             setSearchQuery(""); // Clear search to return home
             onLogOutProfile();
           }}
         />
         
-        {/* NEW: Netflix Style Search Input Element Box */}
+        {/* NEW: aha Style Search Input Element Box */}
         <div className="nav__searchBox">
           <input 
             type="text" 
@@ -62,13 +62,13 @@ function Nav({ currentProfile, onLogOutProfile, searchQuery, setSearchQuery }) {
             </div>
             <hr />
             <div className="nav__dropdownItem" onClick={() => { setSearchQuery(""); onLogOutProfile(); }}>
-              Switch Profiles
+              Switch
             </div>
             <div className="nav__dropdownItem" onClick={() => {
               localStorage.removeItem('token');
               window.location.reload();
             }}>
-              Sign Out of Netflix
+              Sign Out
             </div>
           </div>
         )}

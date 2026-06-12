@@ -37,8 +37,8 @@ function Login() {
       <div className="login__background">
         <img 
           className="login__logo" 
-          src="https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg" 
-          alt="Netflix Logo" 
+          src="https://www.aha.video/favicon.ico" 
+          alt="aha Logo" 
         />
         <div className="login__gradient" />
       </div>
@@ -67,10 +67,10 @@ function Login() {
           
           <h4>
             <span className="login__gray">
-              {isSignIn ? "New to Netflix? " : "Already have an account? "}
+              {isSignIn ? "New to aha ? " : "Already have an account? "}
             </span>
             <span className="login__link" onClick={() => setIsSignIn(!isSignIn)}>
-              {isSignIn ? "Sign up now." : "Sign in now."}
+              {isSignIn ?  "Re-gister now." : "Sign in now."}
             </span>
           </h4>
         </form>
