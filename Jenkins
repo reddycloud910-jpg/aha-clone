@@ -62,6 +62,7 @@ pipeline {
                 }
             }
         }
+    } // <-- THIS WAS MISSING! This closes out your stages block properly
 
     post {
         success {
