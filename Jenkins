@@ -1,67 +1,77 @@
 pipeline {
     agent any
-   
+
     environment {
-        NODE_HOME = tool 'NodeJS-26.3.0' // Matches the Node tool name configured in Jenkins
-        DOCKER_HUB_USER = 'lakshmi7330'   // Your Docker Hub username
-        APP_VERSION = "1.0.1"
+        NODE_HOME = tool 'NodeJS-26.3.0'
+        DOCKER_HUB_USER = 'lakshmi7330'
+        APP_VERSION = '1.0.1'
     }
-   
-    stages { // Added back the missing stages wrapper block
-       
+
+    stages {
+
         stage('Git Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/reddycloud910-jpg/aha-clone.git'
+                git branch: 'main',
+                    url: 'https://github.com/reddycloud910-jpg/aha-clone.git'
             }
         }
-       
-       
-       
+
         stage('Initialize Node Environment') {
-            environment {
-                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
-            }
             steps {
-                sh 'node -v'
-                sh 'npm -v'
+                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
+                    sh '''
+                        echo "Node Location:"
+                        which node
+                        node -v
+                        npm -v
+                    '''
+                }
             }
         }
 
-          stage('Build') {
-            environment {
-                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
-            }
+        stage('Install Backend Dependencies') {
             steps {
-                sh 'node -v'
+                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
+                    dir('backend') {
+                        sh 'npm ci --omit=dev'
+                    }
+                }
             }
         }
 
-        stage('Install & Build Application') {
-            environment {
-                PATH = "${env.NODE_HOME}/bin:${env.PATH}"
-            }
+        stage('Build Frontend') {
             steps {
-                // Compile and isolate backend operational dependencies
-                sh '''
-                    cd backend
-                    npm ci --only=production
-                '''
-               
-                // Compile and optimize static production assets for React frontend
-                sh '''
-                    cd frontend
-                    npm ci
-                    npm run build
-                '''
+                withEnv(["PATH=${env.NODE_HOME}/bin:${env.PATH}"]) {
+                    dir('frontend') {
+                        sh '''
+                            npm ci
+                            npm run build
+                        '''
+                    }
+                }
             }
         }
-       
-        stage('Package Container Images') {
+
+        stage('Build Docker Images') {
             steps {
-                sh "docker build -t ${env.DOCKER_HUB_USER}/netflix-frontend:${env.APP_VERSION} ./frontend"
-                sh "docker build -t ${env.DOCKER_HUB_USER}/netflix-backend:${env.APP_VERSION} ./backend"
+                sh """
+                    docker build -t ${DOCKER_HUB_USER}/netflix-frontend:${APP_VERSION} ./frontend
+                """
+
+                sh """
+                    docker build -t ${DOCKER_HUB_USER}/netflix-backend:${APP_VERSION} ./backend
+                """
             }
         }
-       
-    } // Closes stages
-} // Closes pipeline
+    }
+
+    post {
+        success {
+            echo 'Pipeline completed successfully.'
+        }
+
+        failure {
+            echo 'Pipeline failed.'
+        }
+    }
+}
