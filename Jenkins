@@ -3,7 +3,7 @@ pipeline {
    
     environment {
         NODE_HOME = tool 'NodeJS-26.3.0' // Matches the Node tool name configured in Jenkins
-        DOCKER_HUB_USER = 'vishwask10'   // Your Docker Hub username
+        DOCKER_HUB_USER = 'lakshmi7330'   // Your Docker Hub username
         APP_VERSION = "1.0.1"
     }
    
