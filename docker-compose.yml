@@ -1,3 +1,13 @@
+# secrets.yaml — apply this first, never commit to Git!
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aha-backend-secrets
+type: Opaque
+stringData:
+  MONGO_URI: "mongodb://reddycloud910_db_user:<password>@cluster0-shard-00-00.l99lok8.mongodb.net:27017/netflixClone?ssl=true&authSource=admin&retryWrites=true&w=majority"
+  JWT_SECRET: "mySuperSecretNetflixCloneKey2026!@#"
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -5,7 +15,7 @@ metadata:
   labels:
     app: aha-backend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: aha-backend
@@ -23,19 +33,44 @@ spec:
         env:
         - name: PORT
           value: "5000"
-        - name: MONGO_URI
-          value: "mongodb://reddycloud910_db_user:gu1jDcwQMObo0aoC@cluster0-shard-00-00.l99lok8.mongodb.net:27017/netflixClone?ssl=true&authSource=admin&retryWrites=true&w=majority"
-        - name: JWT_SECRET
-          value: "mySuperSecretNetflixCloneKey2026!@#"
         - name: VITE_API_URL
-          value: "http://localhost:5000"
+          value: "http://aha-backend:5000"   # ✅ Fixed
+        - name: MONGO_URI
+          valueFrom:
+            secretKeyRef:
+              name: aha-backend-secrets
+              key: MONGO_URI
+        - name: JWT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: aha-backend-secrets
+              key: JWT_SECRET
+        resources:
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 15
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 5
+          periodSeconds: 10
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: aha-backend
 spec:
-  type: ClusterIP # Exposes backend internally inside the cluster network
+  type: ClusterIP
   selector:
     app: aha-backend
   ports:
@@ -50,7 +85,7 @@ metadata:
   labels:
     app: aha-frontend
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: aha-frontend
@@ -65,16 +100,29 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        resources:
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+          limits:
+            cpu: "250m"
+            memory: "256Mi"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 10
+          periodSeconds: 15
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: aha-frontend
 spec:
-  type: LoadBalancer # Exposes frontend outside the cluster to your browser
+  type: LoadBalancer
   selector:
     app: aha-frontend
   ports:
     - protocol: TCP
-      port: 3000       # Type http://localhost:3000 in your browser
-      targetPort: 80   # Routes to Nginx inside the frontend container
+      port: 3000
+      targetPort: 80
