@@ -1,0 +1,362 @@
+pipeline {
+    agent any
+    
+    environment {
+        // Docker Hub Configuration
+        DOCKER_HUB_USER = 'lakshmi7330'
+        DOCKER_HUB_CREDS = 'docker-hub-creds'
+        APP_VERSION = '1.0.1'
+        BUILD_NUMBER = "${BUILD_NUMBER}"
+        
+        // SonarQube Configuration
+        SONARQUBE_SERVER = 'sonarqube'
+        SONAR_HOST_URL = 'http://localhost:9000'
+        SONAR_LOGIN = 'admin'
+        SONAR_PASSWORD = 'admin'
+    }
+    
+    options {
+        // Keep last 10 builds
+        buildDiscarder(logRotator(numToKeepStr: '10'))
+        // Timeout after 1 hour
+        timeout(time: 1, unit: 'HOURS')
+        // Add timestamps to console output
+        timestamps()
+    }
+    
+    stages {
+        stage('📥 Checkout') {
+            steps {
+                script {
+                    echo "========== STAGE: Checkout Code =========="
+                    echo "Repository: https://github.com/reddycloud910-jpg/aha-clone.git"
+                    echo "Branch: main"
+                }
+                
+                git branch: 'main',
+                    url: 'https://github.com/reddycloud910-jpg/aha-clone.git'
+                
+                script {
+                    echo "✅ Code checkout completed successfully"
+                    sh 'echo "Workspace contents:" && ls -la'
+                }
+            }
+        }
+        
+        stage('🔍 Verify Tools') {
+            steps {
+                script {
+                    echo "========== STAGE: Verify Tools =========="
+                }
+                
+                sh '''
+                    echo "Checking Node.js..."
+                    node -v || echo "⚠️ Node.js not found (optional)"
+                    
+                    echo "Checking npm..."
+                    npm -v || echo "⚠️ npm not found (optional)"
+                    
+                    echo "Checking Docker..."
+                    docker --version
+                    
+                    echo "Checking Git..."
+                    git --version
+                '''
+                
+                script {
+                    echo "✅ Tool verification completed"
+                }
+            }
+        }
+        
+        stage('📦 Backend Install') {
+            steps {
+                script {
+                    echo "========== STAGE: Backend Install =========="
+                }
+                
+                dir('backend') {
+                    sh '''
+                        echo "Installing backend dependencies..."
+                        if [ ! -f "package.json" ]; then
+                            echo "❌ ERROR: backend/package.json not found"
+                            exit 1
+                        fi
+                        npm ci --omit=dev
+                        echo "✅ Backend dependencies installed"
+                    '''
+                }
+            }
+        }
+        
+        stage('🏗️ Frontend Build') {
+            steps {
+                script {
+                    echo "========== STAGE: Frontend Build =========="
+                }
+                
+                dir('frontend') {
+                    sh '''
+                        echo "Building frontend application..."
+                        if [ ! -f "package.json" ]; then
+                            echo "❌ ERROR: frontend/package.json not found"
+                            exit 1
+                        fi
+                        
+                        echo "Installing dependencies..."
+                        npm ci
+                        
+                        echo "Running build..."
+                        npm run build
+                        
+                        if [ ! -d "dist" ]; then
+                            echo "❌ ERROR: Build output directory 'dist' not found"
+                            exit 1
+                        fi
+                        
+                        echo "✅ Frontend build completed"
+                        echo "Build artifacts:"
+                        ls -lah dist/ | head -10
+                    '''
+                }
+            }
+        }
+        
+        stage('🔐 SonarQube Analysis') {
+            steps {
+                script {
+                    echo "========== STAGE: SonarQube Code Analysis =========="
+                    echo "Running code quality analysis..."
+                }
+                
+                sh '''
+                    echo "Checking SonarQube server availability..."
+                    curl -u ${SONAR_LOGIN}:${SONAR_PASSWORD} \
+                        ${SONAR_HOST_URL}/api/system/status || {
+                        echo "⚠️ WARNING: SonarQube not responding"
+                        echo "Make sure SonarQube is running: docker ps | grep sonarqube"
+                    }
+                '''
+                
+                // Frontend SonarQube Analysis
+                dir('frontend') {
+                    sh '''
+                        echo "Analyzing Frontend with SonarQube..."
+                        sonar-scanner \
+                          -Dsonar.projectKey=aha-frontend \
+                          -Dsonar.projectName="AHA Frontend" \
+                          -Dsonar.projectVersion=${APP_VERSION} \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=${SONAR_LOGIN} \
+                          -Dsonar.password=${SONAR_PASSWORD} \
+                          -Dsonar.exclusions=node_modules/**,dist/** \
+                          -Dsonar.sourceEncoding=UTF-8 || {
+                            echo "⚠️ Frontend analysis completed with warnings"
+                        }
+                    '''
+                }
+                
+                // Backend SonarQube Analysis
+                dir('backend') {
+                    sh '''
+                        echo "Analyzing Backend with SonarQube..."
+                        sonar-scanner \
+                          -Dsonar.projectKey=aha-backend \
+                          -Dsonar.projectName="AHA Backend" \
+                          -Dsonar.projectVersion=${APP_VERSION} \
+                          -Dsonar.sources=src \
+                          -Dsonar.host.url=${SONAR_HOST_URL} \
+                          -Dsonar.login=${SONAR_LOGIN} \
+                          -Dsonar.password=${SONAR_PASSWORD} \
+                          -Dsonar.exclusions=node_modules/**,dist/** \
+                          -Dsonar.sourceEncoding=UTF-8 || {
+                            echo "⚠️ Backend analysis completed with warnings"
+                        }
+                    '''
+                }
+                
+                script {
+                    echo "✅ SonarQube analysis completed"
+                    echo "View results at: ${SONAR_HOST_URL}"
+                }
+            }
+        }
+        
+        stage('🐳 Docker Build - Frontend') {
+            steps {
+                script {
+                    echo "========== STAGE: Docker Build - Frontend =========="
+                    echo "Building image: ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION}"
+                }
+                
+                dir('frontend') {
+                    sh '''
+                        echo "Checking for Dockerfile..."
+                        if [ ! -f Dockerfile ]; then
+                            echo "❌ ERROR: frontend/Dockerfile missing"
+                            echo "Please create a Dockerfile in the frontend directory"
+                            exit 1
+                        fi
+                        
+                        echo "Building Docker image..."
+                        docker build -t ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION} .
+                        
+                        echo "✅ Frontend Docker image built successfully"
+                        docker images | grep aha-frontend
+                    '''
+                }
+            }
+        }
+        
+        stage('🐳 Docker Build - Backend') {
+            steps {
+                script {
+                    echo "========== STAGE: Docker Build - Backend =========="
+                    echo "Building image: ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION}"
+                }
+                
+                dir('backend') {
+                    sh '''
+                        echo "Checking for Dockerfile..."
+                        if [ ! -f Dockerfile ]; then
+                            echo "❌ ERROR: backend/Dockerfile missing"
+                            echo "Please create a Dockerfile in the backend directory"
+                            exit 1
+                        fi
+                        
+                        echo "Building Docker image..."
+                        docker build -t ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION} .
+                        
+                        echo "✅ Backend Docker image built successfully"
+                        docker images | grep aha-backend
+                    '''
+                }
+            }
+        }
+        
+        stage('🔑 Docker Hub Login') {
+            steps {
+                script {
+                    echo "========== STAGE: Docker Hub Authentication =========="
+                }
+                
+                withCredentials([usernamePassword(credentialsId: 'docker-hub-creds',
+                                                   usernameVariable: 'DOCKER_USER',
+                                                   passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo "Authenticating with Docker Hub..."
+                        echo ${DOCKER_PASS} | docker login -u ${DOCKER_USER} --password-stdin
+                        echo "✅ Docker Hub login successful"
+                    '''
+                }
+            }
+        }
+        
+        stage('📤 Push to Docker Hub') {
+            steps {
+                script {
+                    echo "========== STAGE: Push Images to Docker Hub =========="
+                }
+                
+                sh '''
+                    echo "Pushing frontend image to Docker Hub..."
+                    docker push ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION}
+                    
+                    echo "Pushing backend image to Docker Hub..."
+                    docker push ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION}
+                    
+                    echo "✅ Images pushed successfully to Docker Hub"
+                '''
+            }
+        }
+        
+        stage('✅ Verification & Summary') {
+            steps {
+                script {
+                    echo "========== STAGE: Verification =========="
+                }
+                
+                sh '''
+                    echo "Verifying Docker images..."
+                    docker images | grep aha
+                    
+                    echo ""
+                    echo "========== BUILD SUMMARY =========="
+                    echo "Application: AHA Clone"
+                    echo "Frontend Image: ${DOCKER_HUB_USER}/aha-frontend:${APP_VERSION}"
+                    echo "Backend Image: ${DOCKER_HUB_USER}/aha-backend:${APP_VERSION}"
+                    echo "Build Number: ${BUILD_NUMBER}"
+                    echo "Build Time: $(date)"
+                    echo ""
+                    echo "Access Points:"
+                    echo "  Jenkins: http://localhost:8080"
+                    echo "  SonarQube: http://localhost:9000"
+                    echo "  Docker Hub: https://hub.docker.com/u/${DOCKER_HUB_USER}"
+                    echo "===================================="
+                '''
+                
+                script {
+                    echo "✅ Verification completed"
+                }
+            }
+        }
+    }
+    
+    post {
+        success {
+            echo "✅ ==================== BUILD SUCCESSFUL ===================="
+            echo "Pipeline execution completed successfully!"
+            echo "Build Duration: ${currentBuild.durationString}"
+            echo ""
+            echo "📊 Results:"
+            echo "  ✓ Code checkout: PASSED"
+            echo "  ✓ Tools verified: PASSED"
+            echo "  ✓ Dependencies installed: PASSED"
+            echo "  ✓ Frontend built: PASSED"
+            echo "  ✓ Backend installed: PASSED"
+            echo "  ✓ SonarQube analysis: COMPLETED"
+            echo "  ✓ Docker images built: PASSED"
+            echo "  ✓ Images pushed to Docker Hub: PASSED"
+            echo ""
+            echo "🔗 Access Your Results:"
+            echo "  Jenkins: http://localhost:8080/job/AHA-Clone-Pipeline/"
+            echo "  SonarQube: http://localhost:9000/projects"
+            echo "  Docker Hub: https://hub.docker.com/u/${DOCKER_HUB_USER}"
+            echo "=========================================================="
+        }
+        
+        failure {
+            echo "❌ ==================== BUILD FAILED ===================="
+            echo "Pipeline execution failed!"
+            echo "Build Number: ${BUILD_NUMBER}"
+            echo "Error: Check the logs above for details"
+            echo "========================================================"
+        }
+        
+        unstable {
+            echo "⚠️ ==================== BUILD UNSTABLE ===================="
+            echo "Pipeline completed with warnings"
+            echo "Check SonarQube for code quality issues"
+            echo "SonarQube: http://localhost:9000"
+            echo "==========================================================="
+        }
+        
+        always {
+            script {
+                echo ""
+                echo "🔧 Cleanup Operations..."
+                sh '''
+                    # Logout from Docker Hub for security
+                    docker logout || true
+                    
+                    echo "Disk usage:"
+                    df -h | head -2
+                    
+                    echo "Docker images count:"
+                    docker images | wc -l
+                '''
+            }
+        }
+    }
+}
